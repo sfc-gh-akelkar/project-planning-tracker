@@ -6,8 +6,7 @@
 -- INSTRUCTIONS:
 -- 1. Update the variables below with your desired names
 -- 2. Run this script with a role that has privileges to create roles, 
---    databases, warehouses, and grants (e.g., ACCOUNTADMIN, SYSADMIN, or 
---    a custom admin role)
+--    databases, warehouses, and grants (e.g., ACCOUNTADMIN or custom admin role)
 --
 -- =============================================================================
 
@@ -32,19 +31,24 @@ GRANT ROLE IDENTIFIER($PROJECT_ROLE) TO ROLE SYSADMIN;
 -- GRANT ROLE IDENTIFIER($PROJECT_ROLE) TO USER IDENTIFIER($YOUR_USERNAME);
 
 -- =============================================================================
--- STEP 2: Create database and schemas
+-- STEP 2: Create database
 -- =============================================================================
 CREATE DATABASE IF NOT EXISTS IDENTIFIER($PROJECT_DATABASE)
     COMMENT = 'Database for Delta Dental Project Planning Tracker';
 
-CREATE SCHEMA IF NOT EXISTS IDENTIFIER($PROJECT_DATABASE || '.APP')
+-- =============================================================================
+-- STEP 3: Create schemas (must use database context)
+-- =============================================================================
+USE DATABASE IDENTIFIER($PROJECT_DATABASE);
+
+CREATE SCHEMA IF NOT EXISTS APP
     COMMENT = 'Schema for Streamlit app and related objects';
 
-CREATE SCHEMA IF NOT EXISTS IDENTIFIER($PROJECT_DATABASE || '.DATA')
+CREATE SCHEMA IF NOT EXISTS DATA
     COMMENT = 'Schema for data tables and views';
 
 -- =============================================================================
--- STEP 3: Create warehouse
+-- STEP 4: Create warehouse
 -- =============================================================================
 CREATE WAREHOUSE IF NOT EXISTS IDENTIFIER($PROJECT_WAREHOUSE)
     WAREHOUSE_SIZE = 'X-SMALL'
@@ -54,33 +58,32 @@ CREATE WAREHOUSE IF NOT EXISTS IDENTIFIER($PROJECT_WAREHOUSE)
     COMMENT = 'Warehouse for Delta Dental Project Tracker queries';
 
 -- =============================================================================
--- STEP 4: Grant privileges to the project role
+-- STEP 5: Grant privileges to the project role
 -- =============================================================================
 
 -- Database privileges
 GRANT USAGE ON DATABASE IDENTIFIER($PROJECT_DATABASE) TO ROLE IDENTIFIER($PROJECT_ROLE);
 
--- Schema privileges
-GRANT USAGE ON SCHEMA IDENTIFIER($PROJECT_DATABASE || '.APP') TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT USAGE ON SCHEMA IDENTIFIER($PROJECT_DATABASE || '.DATA') TO ROLE IDENTIFIER($PROJECT_ROLE);
+-- Schema privileges (using current database context)
+GRANT USAGE ON SCHEMA APP TO ROLE IDENTIFIER($PROJECT_ROLE);
+GRANT USAGE ON SCHEMA DATA TO ROLE IDENTIFIER($PROJECT_ROLE);
 
-GRANT CREATE TABLE ON SCHEMA IDENTIFIER($PROJECT_DATABASE || '.DATA') TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT CREATE VIEW ON SCHEMA IDENTIFIER($PROJECT_DATABASE || '.DATA') TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT CREATE STAGE ON SCHEMA IDENTIFIER($PROJECT_DATABASE || '.APP') TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT CREATE STREAMLIT ON SCHEMA IDENTIFIER($PROJECT_DATABASE || '.APP') TO ROLE IDENTIFIER($PROJECT_ROLE);
+GRANT CREATE TABLE ON SCHEMA DATA TO ROLE IDENTIFIER($PROJECT_ROLE);
+GRANT CREATE VIEW ON SCHEMA DATA TO ROLE IDENTIFIER($PROJECT_ROLE);
+GRANT CREATE STAGE ON SCHEMA APP TO ROLE IDENTIFIER($PROJECT_ROLE);
+GRANT CREATE STREAMLIT ON SCHEMA APP TO ROLE IDENTIFIER($PROJECT_ROLE);
 
 -- Future grants on tables/views in DATA schema
-GRANT SELECT, INSERT, UPDATE, DELETE ON FUTURE TABLES IN SCHEMA IDENTIFIER($PROJECT_DATABASE || '.DATA') TO ROLE IDENTIFIER($PROJECT_ROLE);
-GRANT SELECT ON FUTURE VIEWS IN SCHEMA IDENTIFIER($PROJECT_DATABASE || '.DATA') TO ROLE IDENTIFIER($PROJECT_ROLE);
+GRANT SELECT, INSERT, UPDATE, DELETE ON FUTURE TABLES IN SCHEMA DATA TO ROLE IDENTIFIER($PROJECT_ROLE);
+GRANT SELECT ON FUTURE VIEWS IN SCHEMA DATA TO ROLE IDENTIFIER($PROJECT_ROLE);
 
 -- Warehouse privileges
 GRANT USAGE ON WAREHOUSE IDENTIFIER($PROJECT_WAREHOUSE) TO ROLE IDENTIFIER($PROJECT_ROLE);
 
 -- =============================================================================
--- STEP 5: Create internal stage for app files (using project role)
+-- STEP 6: Create internal stage for app files (using project role)
 -- =============================================================================
 USE ROLE IDENTIFIER($PROJECT_ROLE);
-USE DATABASE IDENTIFIER($PROJECT_DATABASE);
 USE SCHEMA APP;
 USE WAREHOUSE IDENTIFIER($PROJECT_WAREHOUSE);
 
@@ -89,7 +92,7 @@ CREATE STAGE IF NOT EXISTS IDENTIFIER($PROJECT_STAGE)
     COMMENT = 'Stage for Streamlit app files';
 
 -- =============================================================================
--- STEP 6: Verification
+-- STEP 7: Verification
 -- =============================================================================
 SELECT 'Setup Complete!' AS STATUS;
 SHOW GRANTS TO ROLE IDENTIFIER($PROJECT_ROLE);
