@@ -25,9 +25,8 @@ This application is designed to run as **Streamlit in Snowflake (SiS)**. Follow 
 
 ### Prerequisites
 
-- Snowflake account with appropriate privileges
-- Access to `SECURITYADMIN` and `SYSADMIN` roles (or equivalent)
-- `ACCOUNTADMIN` role access (only needed if creating a compute pool)
+- Snowflake account
+- A role with privileges to create roles, databases, warehouses, and grants (e.g., `ACCOUNTADMIN` or a custom admin role)
 - Snowflake CLI (`snow`) installed (optional, for CLI deployment)
 
 ### Step 1: Configure Variables
@@ -48,7 +47,7 @@ SET PROJECT_STAGE = 'DDPA_APP_STAGE';
 
 ### Step 2: Create Role and Infrastructure
 
-**Run as SECURITYADMIN or SYSADMIN:**
+Run with your privileged role:
 
 ```bash
 # Using Snowflake CLI
