@@ -30,7 +30,23 @@ This application is designed to run as **Streamlit in Snowflake (SiS)**. Follow 
 - `ACCOUNTADMIN` role access (only needed if creating a compute pool)
 - Snowflake CLI (`snow`) installed (optional, for CLI deployment)
 
-### Step 1: Create Role and Infrastructure
+### Step 1: Configure Variables
+
+Each SQL script has a **configuration section at the top** where you set your preferred names once:
+
+```sql
+-- =============================================================================
+-- CONFIGURATION VARIABLES - UPDATE THESE AS NEEDED
+-- =============================================================================
+SET PROJECT_ROLE = 'DDPA_PROJECT_TRACKER_ROLE';
+SET PROJECT_DATABASE = 'DDPA_PROJECT_TRACKER_DB';
+SET PROJECT_WAREHOUSE = 'DDPA_PROJECT_TRACKER_WH';
+SET PROJECT_STAGE = 'DDPA_APP_STAGE';
+```
+
+**To customize:** Simply change the values in the `SET` statements. The rest of the script uses these variables automatically via `IDENTIFIER($PROJECT_ROLE)` syntax.
+
+### Step 2: Create Role and Infrastructure
 
 **Run as SECURITYADMIN or SYSADMIN:**
 
@@ -42,29 +58,26 @@ snow sql -f sql/01_role_setup.sql
 ```
 
 This script creates:
-- `DDPA_PROJECT_TRACKER_ROLE` - Dedicated role for all project artifacts
-- `DDPA_PROJECT_TRACKER_DB` - Database with `APP` and `DATA` schemas
-- `DDPA_PROJECT_TRACKER_WH` - X-Small warehouse for queries
-- `DDPA_APP_STAGE` - Internal stage for app files
+- Project role (default: `DDPA_PROJECT_TRACKER_ROLE`)
+- Database with `APP` and `DATA` schemas
+- X-Small warehouse for queries
+- Internal stage for app files
 - All necessary privileges
 
-**Grant the role to yourself:**
+**Grant the role to yourself** (uncomment in the script or run manually):
 ```sql
--- Replace YOUR_USERNAME with your actual username
-GRANT ROLE DDPA_PROJECT_TRACKER_ROLE TO USER YOUR_USERNAME;
+GRANT ROLE IDENTIFIER($PROJECT_ROLE) TO USER YOUR_USERNAME;
 ```
 
-### Step 2: Create Data Tables
+### Step 3: Create Data Tables
 
-**Run as DDPA_PROJECT_TRACKER_ROLE:**
+**Ensure the same variables are set**, then run:
 
 ```bash
 snow sql -f sql/02_ddl_tables.sql
 ```
 
-### Step 3: Load Seed Data
-
-**Run as DDPA_PROJECT_TRACKER_ROLE:**
+### Step 4: Load Seed Data
 
 ```bash
 snow sql -f sql/04_seed_data.sql
@@ -76,15 +89,13 @@ This loads:
 - 86 use cases (from `use_case_list.csv`)
 - Reference data (statuses, t-shirt sizes, data domains)
 
-### Step 4: Create Views
-
-**Run as DDPA_PROJECT_TRACKER_ROLE:**
+### Step 5: Create Views
 
 ```bash
 snow sql -f sql/03_views.sql
 ```
 
-### Step 5: Deploy Streamlit App
+### Step 6: Deploy Streamlit App
 
 **Option A: Using Snowflake CLI (Recommended)**
 
@@ -147,6 +158,8 @@ CREATE OR REPLACE STREAMLIT DDPA_PROJECT_TRACKER
 
 ## SQL Scripts Reference
 
+All scripts use **session variables** for easy customization. Update the `SET` statements at the top of each script to use your own naming conventions.
+
 | Script | Purpose | Run Order |
 |--------|---------|-----------|
 | `sql/01_role_setup.sql` | Creates role, database, warehouse, privileges | 1 |
@@ -155,6 +168,14 @@ CREATE OR REPLACE STREAMLIT DDPA_PROJECT_TRACKER
 | `sql/03_views.sql` | Creates views for reporting | 4 |
 | `sql/05_streamlit_deploy.sql` | Deploys Streamlit app | 5 |
 
+**Default variable values:**
+```sql
+SET PROJECT_ROLE = 'DDPA_PROJECT_TRACKER_ROLE';
+SET PROJECT_DATABASE = 'DDPA_PROJECT_TRACKER_DB';
+SET PROJECT_WAREHOUSE = 'DDPA_PROJECT_TRACKER_WH';
+SET PROJECT_STAGE = 'DDPA_APP_STAGE';
+```
+
 ---
 
 ## Role Hierarchy
@@ -162,16 +183,16 @@ CREATE OR REPLACE STREAMLIT DDPA_PROJECT_TRACKER
 ```
 ACCOUNTADMIN
     └── SYSADMIN
-            └── DDPA_PROJECT_TRACKER_ROLE (project role)
+            └── <PROJECT_ROLE> (e.g., DDPA_PROJECT_TRACKER_ROLE)
 ```
 
-**DDPA_PROJECT_TRACKER_ROLE privileges:**
-- USAGE on `DDPA_PROJECT_TRACKER_DB`
+**Project role privileges:**
+- USAGE on project database
 - USAGE on schemas `APP` and `DATA`
 - CREATE TABLE, CREATE VIEW on `DATA` schema
 - CREATE STREAMLIT, CREATE STAGE on `APP` schema
 - SELECT, INSERT, UPDATE, DELETE on all tables
-- USAGE on `DDPA_PROJECT_TRACKER_WH`
+- USAGE on project warehouse
 
 ---
 
@@ -353,16 +374,16 @@ project-planning-tracker/
 -- Verify your role has the project role granted
 SHOW GRANTS TO USER YOUR_USERNAME;
 
--- Grant if missing
+-- Grant if missing (use your configured role name)
 USE ROLE SECURITYADMIN;
-GRANT ROLE DDPA_PROJECT_TRACKER_ROLE TO USER YOUR_USERNAME;
+GRANT ROLE <PROJECT_ROLE> TO USER YOUR_USERNAME;
 ```
 
 **"Object does not exist" error:**
 ```sql
 -- Verify you're using the correct role and context
-USE ROLE DDPA_PROJECT_TRACKER_ROLE;
-USE DATABASE DDPA_PROJECT_TRACKER_DB;
+USE ROLE <PROJECT_ROLE>;
+USE DATABASE <PROJECT_DATABASE>;
 USE SCHEMA DATA;
 
 -- Check if tables exist
