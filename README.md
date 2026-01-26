@@ -26,7 +26,11 @@ This application is designed to run as **Streamlit in Snowflake (SiS)**. Follow 
 ### Prerequisites
 
 - Snowflake account
-- A role with privileges to create roles, databases, warehouses, and grants (e.g., `ACCOUNTADMIN` or a custom admin role)
+- A role with the following privileges (e.g., `ACCOUNTADMIN` or a custom admin role):
+  - `CREATE ROLE` on the account
+  - `CREATE DATABASE` on the account
+  - `CREATE WAREHOUSE` on the account
+  - `MANAGE GRANTS` on the account (to grant privileges to the new role)
 - Snowflake CLI (`snow`) installed (optional, for CLI deployment)
 
 ### Step 1: Configure Variables
