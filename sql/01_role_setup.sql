@@ -100,6 +100,10 @@ SHOW GRANTS TO ROLE IDENTIFIER($PROJECT_ROLE);
 -- =============================================================================
 -- OPTIONAL: Compute Pool for Container Runtime
 -- =============================================================================
+-- NOTE: Creating compute pools requires CREATE COMPUTE POOL privilege on the
+-- account. This is typically only available to ACCOUNTADMIN or roles with
+-- explicit grants.
+--
 -- Uncomment if you need a compute pool for Streamlit Container Runtime:
 --
 -- SET COMPUTE_POOL_NAME = 'DDPA_STREAMLIT_POOL';
