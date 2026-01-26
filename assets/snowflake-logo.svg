@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="#29B5E8">
+  <title>Snowflake</title>
+  <!-- Snowflake logo approximation -->
+  <g transform="translate(100,100)">
+    <!-- Center hexagon -->
+    <polygon points="0,-30 26,-15 26,15 0,30 -26,15 -26,-15" fill="#29B5E8"/>
+    
+    <!-- Top spoke -->
+    <rect x="-5" y="-80" width="10" height="50" fill="#29B5E8"/>
+    <circle cx="0" cy="-85" r="8" fill="#29B5E8"/>
+    
+    <!-- Top-right spoke -->
+    <rect x="-5" y="-80" width="10" height="50" fill="#29B5E8" transform="rotate(60)"/>
+    <circle cx="0" cy="-85" r="8" fill="#29B5E8" transform="rotate(60)"/>
+    
+    <!-- Bottom-right spoke -->
+    <rect x="-5" y="-80" width="10" height="50" fill="#29B5E8" transform="rotate(120)"/>
+    <circle cx="0" cy="-85" r="8" fill="#29B5E8" transform="rotate(120)"/>
+    
+    <!-- Bottom spoke -->
+    <rect x="-5" y="-80" width="10" height="50" fill="#29B5E8" transform="rotate(180)"/>
+    <circle cx="0" cy="-85" r="8" fill="#29B5E8" transform="rotate(180)"/>
+    
+    <!-- Bottom-left spoke -->
+    <rect x="-5" y="-80" width="10" height="50" fill="#29B5E8" transform="rotate(240)"/>
+    <circle cx="0" cy="-85" r="8" fill="#29B5E8" transform="rotate(240)"/>
+    
+    <!-- Top-left spoke -->
+    <rect x="-5" y="-80" width="10" height="50" fill="#29B5E8" transform="rotate(300)"/>
+    <circle cx="0" cy="-85" r="8" fill="#29B5E8" transform="rotate(300)"/>
+  </g>
+</svg>

@@ -1,0 +1,14 @@
+[theme]
+# Delta Dental Green + Snowflake Blue co-branding
+primaryColor = "#39B54A"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F4F8"
+textColor = "#1E3A5F"
+font = "sans serif"
+
+[server]
+headless = true
+port = 8501
+
+[browser]
+gatherUsageStats = false
