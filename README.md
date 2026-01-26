@@ -31,6 +31,11 @@ This application is designed to run as **Streamlit in Snowflake (SiS)**. Follow 
   - `CREATE DATABASE` on the account
   - `CREATE WAREHOUSE` on the account
   - `MANAGE GRANTS` on the account (to grant privileges to the new role)
+  - `CREATE STREAMLIT` on the schema (granted to project role)
+  - `CREATE STAGE` on the schema (granted to project role)
+- For Streamlit Container Runtime (optional):
+  - `CREATE COMPUTE POOL` on the account
+  - `USAGE` on compute pool (granted to project role)
 - Snowflake CLI (`snow`) installed (optional, for CLI deployment)
 
 ### Step 1: Configure Variables
