@@ -1,0 +1,9 @@
+[project]
+name = "ddpa_project_tracker"
+version = "1.0.0"
+description = "Delta Dental Project Planning Tracker"
+dependencies = [
+    "pandas==2.0.3",
+    "plotly==5.9.0",
+    "openpyxl==3.0.10",
+]
