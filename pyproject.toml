@@ -3,8 +3,5 @@ name = "ddpa_project_tracker"
 version = "1.0.0"
 description = "Delta Dental Project Planning Tracker"
 dependencies = [
-    "streamlit>=1.48.0",
-    "snowflake-snowpark-python",
-    "plotly",
     "openpyxl",
 ]
