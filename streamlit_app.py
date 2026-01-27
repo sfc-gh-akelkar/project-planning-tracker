@@ -8,7 +8,7 @@ Single-file application with all functionality inlined.
 """
 
 import streamlit as st
-import pandas as pd
+import snowflake.snowpark.modin.pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime, timedelta

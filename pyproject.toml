@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "Delta Dental Project Planning Tracker"
 dependencies = [
     "streamlit>=1.48.0",
-    "pandas",
+    "snowflake-snowpark-python",
     "plotly",
     "openpyxl",
 ]
