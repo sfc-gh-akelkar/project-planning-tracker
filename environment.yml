@@ -4,10 +4,4 @@ channels:
 dependencies:
   - pandas>=2.0.0
   - plotly>=5.18.0
-  - pyyaml>=6.0
-  - pillow>=10.0.0
   - openpyxl>=3.1.2
-  - pip
-  - pip:
-    - streamlit-option-menu>=0.3.6
-    - streamlit-extras>=0.3.6
