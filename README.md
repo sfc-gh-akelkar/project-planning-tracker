@@ -24,18 +24,14 @@ This application is designed to run as **Streamlit in Snowflake (SiS)**. All dat
 
 ### Prerequisites
 
-- Snowflake account
+- Snowflake account with Snowsight access
 - A role with the following privileges (e.g., `ACCOUNTADMIN` or a custom admin role):
   - `CREATE ROLE` on the account
   - `CREATE DATABASE` on the account
   - `CREATE WAREHOUSE` on the account
-  - `MANAGE GRANTS` on the account (to grant privileges to the new role)
-  - `CREATE STREAMLIT` on the schema (granted to project role)
-  - `CREATE STAGE` on the schema (granted to project role)
-- For Streamlit Container Runtime (optional):
-  - `CREATE COMPUTE POOL` on the account
-  - `USAGE` on compute pool (granted to project role)
-- Snowflake CLI (`snow`) installed (optional, for CLI deployment)
+  - `MANAGE GRANTS` on the account
+  - `CREATE STREAMLIT` on the schema
+  - `CREATE STAGE` on the schema
 
 ### Step 1: Configure Variables
 
@@ -51,99 +47,50 @@ SET PROJECT_WAREHOUSE = 'DDPA_PROJECT_TRACKER_WH';
 SET PROJECT_STAGE = 'DDPA_APP_STAGE';
 ```
 
-**To customize:** Simply change the values in the `SET` statements. The rest of the script uses these variables automatically via `IDENTIFIER($PROJECT_ROLE)` syntax.
+**To customize:** Simply change the values in the `SET` statements. The rest of the script uses these variables automatically.
 
-### Step 2: Create Role and Infrastructure
+### Step 2: Run SQL Scripts in Snowsight
 
-Run with your privileged role:
+Open each SQL file in Snowsight and execute in order:
 
-```bash
-# Using Snowflake CLI
-snow sql -f sql/01_role_setup.sql
-
-# Or execute in Snowsight/SnowSQL
-```
-
-This script creates:
-- Project role (default: `DDPA_PROJECT_TRACKER_ROLE`)
-- Database with `APP` and `DATA` schemas
-- X-Small warehouse for queries
-- Internal stage for app files
-- All necessary privileges
+1. **`sql/01_role_setup.sql`** - Creates role, database, warehouse, and privileges
+2. **`sql/02_ddl_tables.sql`** - Creates all data tables
+3. **`sql/04_seed_data.sql`** - Loads initial seed data
+4. **`sql/03_views.sql`** - Creates views for reporting
 
 **Grant the role to yourself** (uncomment in the script or run manually):
 ```sql
 GRANT ROLE IDENTIFIER($PROJECT_ROLE) TO USER YOUR_USERNAME;
 ```
 
-### Step 3: Create Data Tables
+### Step 3: Deploy Streamlit App
 
-**Ensure the same variables are set**, then run:
+**Option A: Using Snowsight UI (Recommended)**
 
-```bash
-snow sql -f sql/02_ddl_tables.sql
-```
-
-### Step 4: Load Seed Data
-
-```bash
-snow sql -f sql/04_seed_data.sql
-```
-
-This loads:
-- 56 member company operating areas
-- 45+ unique companies
-- 86 use cases
-- Reference data (statuses, t-shirt sizes, data domains)
-
-### Step 5: Create Views
-
-```bash
-snow sql -f sql/03_views.sql
-```
-
-### Step 6: Deploy Streamlit App
-
-**Option A: Using Snowflake CLI (Recommended)**
-
-1. Update `snowflake.yml` with your compute pool:
-```yaml
-entities:
-  ddpa_project_tracker:
-    type: streamlit
-    identifier:
-      name: DDPA_PROJECT_TRACKER
-      database: DDPA_PROJECT_TRACKER_DB
-      schema: APP
-    title: "Delta Dental Project Planning Tracker"
-    runtime_name: SYSTEM$ST_CONTAINER_RUNTIME_PY3_11
-    compute_pool: YOUR_COMPUTE_POOL  # Replace with your compute pool
-    query_warehouse: DDPA_PROJECT_TRACKER_WH
-    main_file: streamlit_app.py
-    artifacts:
-      - streamlit_app.py
-      - environment.yml
-      - assets/
-      - SNOW-ICON.png
-      - Snowflake-Logo.png
-```
-
-2. Deploy:
-```bash
-snow streamlit deploy --open
-```
+1. Navigate to **Projects → Streamlit** in Snowsight
+2. Click **+ Streamlit App**
+3. Select database `DDPA_PROJECT_TRACKER_DB` and schema `APP`
+4. Select warehouse `DDPA_PROJECT_TRACKER_WH`
+5. Upload `streamlit_app.py` and `environment.yml`
+6. Upload `assets/` folder contents
+7. Upload `SNOW-ICON.png` and `Snowflake-Logo.png`
+8. Click **Run**
 
 **Option B: Using SQL**
+
+First, upload files to the stage, then run `sql/05_streamlit_deploy.sql`:
 
 ```sql
 USE ROLE DDPA_PROJECT_TRACKER_ROLE;
 USE DATABASE DDPA_PROJECT_TRACKER_DB;
 USE SCHEMA APP;
 
--- Upload files to stage first
+-- Upload files to stage
 PUT file:///path/to/streamlit_app.py @DDPA_APP_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
 PUT file:///path/to/environment.yml @DDPA_APP_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
--- ... upload remaining files ...
+PUT file:///path/to/SNOW-ICON.png @DDPA_APP_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
+PUT file:///path/to/Snowflake-Logo.png @DDPA_APP_STAGE AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
+PUT file:///path/to/assets/delta-dental-logo.webp @DDPA_APP_STAGE/assets/ AUTO_COMPRESS=FALSE OVERWRITE=TRUE;
 
 -- Create the Streamlit app
 CREATE OR REPLACE STREAMLIT DDPA_PROJECT_TRACKER
@@ -153,35 +100,17 @@ CREATE OR REPLACE STREAMLIT DDPA_PROJECT_TRACKER
     TITLE = 'Delta Dental Project Planning Tracker';
 ```
 
-**Option C: Using Snowsight UI**
-
-1. Navigate to **Projects → Streamlit** in Snowsight
-2. Click **+ Streamlit App**
-3. Configure with database `DDPA_PROJECT_TRACKER_DB` and schema `APP`
-4. Upload all files from this repository
-5. Click **Run**
-
 ---
 
 ## SQL Scripts Reference
-
-All scripts use **session variables** for easy customization. Update the `SET` statements at the top of each script to use your own naming conventions.
 
 | Script | Purpose | Run Order |
 |--------|---------|-----------|
 | `sql/01_role_setup.sql` | Creates role, database, warehouse, privileges | 1 |
 | `sql/02_ddl_tables.sql` | Creates all data tables | 2 |
-| `sql/04_seed_data.sql` | Loads initial data from CSVs | 3 |
+| `sql/04_seed_data.sql` | Loads initial data | 3 |
 | `sql/03_views.sql` | Creates views for reporting | 4 |
 | `sql/05_streamlit_deploy.sql` | Deploys Streamlit app | 5 |
-
-**Default variable values:**
-```sql
-SET PROJECT_ROLE = 'DDPA_PROJECT_TRACKER_ROLE';
-SET PROJECT_DATABASE = 'DDPA_PROJECT_TRACKER_DB';
-SET PROJECT_WAREHOUSE = 'DDPA_PROJECT_TRACKER_WH';
-SET PROJECT_STAGE = 'DDPA_APP_STAGE';
-```
 
 ---
 
@@ -190,7 +119,7 @@ SET PROJECT_STAGE = 'DDPA_APP_STAGE';
 ```
 ACCOUNTADMIN
     └── SYSADMIN
-            └── <PROJECT_ROLE> (e.g., DDPA_PROJECT_TRACKER_ROLE)
+            └── DDPA_PROJECT_TRACKER_ROLE
 ```
 
 **Project role privileges:**
@@ -209,21 +138,14 @@ ACCOUNTADMIN
 
 | Table | Description |
 |-------|-------------|
-| `COMPANIES` | Unique Delta Dental member companies with metadata |
-| `USE_CASES` | All use cases and migrations from member companies |
+| `COMPANIES` | Delta Dental member companies with metadata |
+| `USE_CASES` | Use cases and migrations from member companies |
 | `CONTACTS` | Key contacts and stakeholders |
 | `MEETINGS` | Governance meetings and workshops |
 | `MONTHLY_SPEND` | Snowflake consumption by company |
 | `INVESTMENTS` | Training and partner investments |
 | `MARKETPLACE_DRAWDOWNS` | Marketplace product usage |
 | `PARTNERS` | RSA and partner engagements |
-
-### Mapping Tables
-
-| Table | Description |
-|-------|-------------|
-| `MEMBER_COMPANY_OPERATING_AREAS` | Member company operating area data |
-| `USE_CASE_AFFILIATION_MAPPING` | Maps use case affiliations to company IDs |
 
 ### Views
 
@@ -242,24 +164,19 @@ ACCOUNTADMIN
 
 ```
 project-planning-tracker/
-├── streamlit_app.py              # Main Streamlit application (single file)
-├── requirements.txt              # Python dependencies
-├── environment.yml               # SiS container runtime dependencies
-├── snowflake.yml                 # Snowflake CLI deployment config
+├── streamlit_app.py              # Main Streamlit application
+├── environment.yml               # SiS dependencies
 ├── README.md                     # This file
 ├── sql/
-│   ├── 01_role_setup.sql         # Role and infrastructure setup
-│   ├── 02_ddl_tables.sql         # Table DDL
-│   ├── 03_views.sql              # View definitions
-│   ├── 04_seed_data.sql          # Initial data load
-│   └── 05_streamlit_deploy.sql   # App deployment SQL
+│   ├── 01_role_setup.sql
+│   ├── 02_ddl_tables.sql
+│   ├── 03_views.sql
+│   ├── 04_seed_data.sql
+│   └── 05_streamlit_deploy.sql
 ├── assets/
-│   ├── delta-dental-logo.webp
-│   └── snowflake-logo.svg
+│   └── delta-dental-logo.webp
 ├── SNOW-ICON.png
-├── Snowflake-Logo.png
-└── .streamlit/
-    └── config.toml               # Streamlit configuration
+└── Snowflake-Logo.png
 ```
 
 ---
@@ -270,94 +187,50 @@ project-planning-tracker/
 - Real-time metrics across all use cases
 - Status distribution and category analysis
 - Company activity breakdown
-- Recent use cases display
 
 ### Governance
-- **Three-Tiered Structure:**
-  - Umbrella Deal Operations Work Group (DDPA + 6 contracted MCs)
-  - Snowflake Steering Committee (monthly strategic oversight)
-  - Snowflake User Community (workshops & training)
-- Member company onboarding status tracking
-- Partner/RSA engagement management
+- Three-tiered governance structure
+- Member company onboarding tracking
 
 ### Financial Tracking
-- **$15M Commitment Monitoring:**
-  - Monthly spend by member company
-  - YTD consumption tracking
-  - Remaining balance projections
-- **$350K Training Budget:**
-  - Investment allocations (Training, Partner, Project)
-  - Budget utilization tracking
-- **Marketplace Capacity:**
-  - Drawdown tracking by product
-  - Billback status management
+- Monthly spend monitoring
+- Investment allocations
+- Marketplace drawdown tracking
 
 ### Use Cases
-- Full CRUD operations for use cases
+- CRUD operations for use cases
 - Card and table views
-- Advanced filtering by company, status, category
-- Export to Excel
+- Filtering and Excel export
 
 ### Roadmap
-- Interactive Gantt chart visualization
-- Color-coding by status
-- Timeline view of all projects
+- Gantt chart visualization
+- Timeline view of projects
 
 ### Member Companies
-- Individual company views with key contacts, use cases, progress metrics
-- Onboarding phase tracking
+- Individual company views
+- Contacts and progress metrics
 
-### Meetings
-- Operations Work Group, Steering Committee, User Community Workshops
-- Upcoming meeting calendar
-
-### Contacts
-- Contact directory with company assignments
-- Primary contact identification
-
-### Settings
-- Data connection info
-- Refresh data from Snowflake
+### Meetings & Contacts
+- Meeting calendar
+- Contact directory
 
 ---
 
 ## Troubleshooting
 
-### Common Issues
-
 **"Insufficient privileges" error:**
 ```sql
--- Verify your role has the project role granted
 SHOW GRANTS TO USER YOUR_USERNAME;
-
--- Grant if missing (use your configured role name)
 USE ROLE SECURITYADMIN;
-GRANT ROLE <PROJECT_ROLE> TO USER YOUR_USERNAME;
+GRANT ROLE DDPA_PROJECT_TRACKER_ROLE TO USER YOUR_USERNAME;
 ```
 
 **"Object does not exist" error:**
 ```sql
--- Verify you're using the correct role and context
-USE ROLE <PROJECT_ROLE>;
-USE DATABASE <PROJECT_DATABASE>;
-USE SCHEMA DATA;
-
--- Check if tables exist
-SHOW TABLES;
+USE ROLE DDPA_PROJECT_TRACKER_ROLE;
+USE DATABASE DDPA_PROJECT_TRACKER_DB;
+SHOW TABLES IN SCHEMA DATA;
 ```
-
-**Compute pool not available:**
-- Compute pools must be created by `ACCOUNTADMIN`
-- Contact your Snowflake administrator to create one
-
----
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
 
 ---
 
