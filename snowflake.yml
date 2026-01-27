@@ -18,9 +18,6 @@ entities:
     artifacts:
       - streamlit_app.py
       - environment.yml
-      - data/
-      - utils/
       - assets/
-      - delta-dental-logo.webp
-      - Snowflake-Logo.png
       - SNOW-ICON.png
+      - Snowflake-Logo.png

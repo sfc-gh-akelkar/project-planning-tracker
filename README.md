@@ -12,16 +12,15 @@ This Streamlit application provides a comprehensive project tracking and managem
 
 - **Use Case Management** - Track and prioritize initiatives across all member companies
 - **Roadmap Visualization** - Gantt-style timeline views of all projects
-- **Duplicate Detection** - AI-powered identification of overlapping efforts
 - **Member Company Tracking** - Individual views for each Delta Dental member
 - **Contact Management** - Subcommittee and key stakeholder information
-- **One-Pager Generation** - Executive summaries on demand
+- **Financial Tracking** - Monitor spend, investments, and marketplace drawdowns
 
 ---
 
 ## Quick Start: Deploying to Snowflake
 
-This application is designed to run as **Streamlit in Snowflake (SiS)**. Follow these steps to deploy:
+This application is designed to run as **Streamlit in Snowflake (SiS)**. All data is pulled from Snowflake tables.
 
 ### Prerequisites
 
@@ -92,9 +91,9 @@ snow sql -f sql/04_seed_data.sql
 ```
 
 This loads:
-- 56 member company operating areas (from `mc_list.csv`)
+- 56 member company operating areas
 - 45+ unique companies
-- 86 use cases (from `use_case_list.csv`)
+- 86 use cases
 - Reference data (statuses, t-shirt sizes, data domains)
 
 ### Step 5: Create Views
@@ -107,26 +106,26 @@ snow sql -f sql/03_views.sql
 
 **Option A: Using Snowflake CLI (Recommended)**
 
-1. Update `snowflake.yml` with your compute pool and warehouse:
+1. Update `snowflake.yml` with your compute pool:
 ```yaml
 entities:
   ddpa_project_tracker:
     type: streamlit
-    identifier: DDPA_PROJECT_TRACKER
+    identifier:
+      name: DDPA_PROJECT_TRACKER
+      database: DDPA_PROJECT_TRACKER_DB
+      schema: APP
     title: "Delta Dental Project Planning Tracker"
     runtime_name: SYSTEM$ST_CONTAINER_RUNTIME_PY3_11
-    compute_pool: YOUR_COMPUTE_POOL  # Replace
+    compute_pool: YOUR_COMPUTE_POOL  # Replace with your compute pool
     query_warehouse: DDPA_PROJECT_TRACKER_WH
     main_file: streamlit_app.py
     artifacts:
       - streamlit_app.py
-      - data/
-      - utils/
-      - assets/
-      - delta-dental-logo.webp
-      - Snowflake-Logo.png
-      - SNOW-ICON.png
       - environment.yml
+      - assets/
+      - SNOW-ICON.png
+      - Snowflake-Logo.png
 ```
 
 2. Deploy:
@@ -223,7 +222,7 @@ ACCOUNTADMIN
 
 | Table | Description |
 |-------|-------------|
-| `MEMBER_COMPANY_OPERATING_AREAS` | Raw data from `mc_list.csv` |
+| `MEMBER_COMPANY_OPERATING_AREAS` | Member company operating area data |
 | `USE_CASE_AFFILIATION_MAPPING` | Maps use case affiliations to company IDs |
 
 ### Views
@@ -239,44 +238,12 @@ ACCOUNTADMIN
 
 ---
 
-## Local Development
-
-For local development and testing:
-
-### Prerequisites
-
-- Python 3.9+
-- pip
-
-### Installation
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd project-planning-tracker
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the app
-streamlit run streamlit_app.py
-```
-
-The app will automatically use sample data when running locally (no Snowflake connection).
-
----
-
 ## Project Structure
 
 ```
 project-planning-tracker/
-├── streamlit_app.py              # Main Streamlit application
-├── app.py                        # Entry point alias
-├── requirements.txt              # Local Python dependencies
+├── streamlit_app.py              # Main Streamlit application (single file)
+├── requirements.txt              # Python dependencies
 ├── environment.yml               # SiS container runtime dependencies
 ├── snowflake.yml                 # Snowflake CLI deployment config
 ├── README.md                     # This file
@@ -286,19 +253,11 @@ project-planning-tracker/
 │   ├── 03_views.sql              # View definitions
 │   ├── 04_seed_data.sql          # Initial data load
 │   └── 05_streamlit_deploy.sql   # App deployment SQL
-├── data/
-│   ├── __init__.py
-│   ├── sample_data.py            # Sample data for local dev
-│   └── snowflake_data.py         # Snowflake data access layer
-├── utils/
-│   ├── __init__.py
-│   ├── duplicate_detection.py    # Similarity analysis
-│   └── export_utils.py           # Export and one-pager generation
 ├── assets/
 │   ├── delta-dental-logo.webp
 │   └── snowflake-logo.svg
-├── mc_list.csv                   # Source: Member company list
-├── use_case_list.csv             # Source: Use cases list
+├── SNOW-ICON.png
+├── Snowflake-Logo.png
 └── .streamlit/
     └── config.toml               # Streamlit configuration
 ```
@@ -311,7 +270,7 @@ project-planning-tracker/
 - Real-time metrics across all use cases
 - Status distribution and category analysis
 - Company activity breakdown
-- Priority alerts and duplicate warnings
+- Recent use cases display
 
 ### Governance
 - **Three-Tiered Structure:**
@@ -323,7 +282,7 @@ project-planning-tracker/
 
 ### Financial Tracking
 - **$15M Commitment Monitoring:**
-  - Monthly spend by member company (with trend charts)
+  - Monthly spend by member company
   - YTD consumption tracking
   - Remaining balance projections
 - **$350K Training Budget:**
@@ -336,40 +295,29 @@ project-planning-tracker/
 ### Use Cases
 - Full CRUD operations for use cases
 - Card and table views
-- Advanced filtering by company, status, priority, category
+- Advanced filtering by company, status, category
 - Export to Excel
 
 ### Roadmap
 - Interactive Gantt chart visualization
-- Color-coding by company, status, or priority
-- Quarterly breakdown of deliverables
+- Color-coding by status
+- Timeline view of all projects
 
 ### Member Companies
 - Individual company views with key contacts, use cases, progress metrics
-- Association hub and onboarding phase tracking
+- Onboarding phase tracking
 
 ### Meetings
 - Operations Work Group, Steering Committee, User Community Workshops
 - Upcoming meeting calendar
 
 ### Contacts
-- Contact directory with subcommittee assignments
+- Contact directory with company assignments
 - Primary contact identification
-- Partner contact management
-
-### Duplicate Detection
-- Automatic similarity analysis
-- Configurable threshold
-- Merge/consolidation recommendations
-
-### One-Pagers
-- Generate executive summaries
-- Download as HTML/PDF
-- Co-branded formatting
 
 ### Settings
-- Theme & branding configuration
-- Role-Based Access Control
+- Data connection info
+- Refresh data from Snowflake
 
 ---
 
